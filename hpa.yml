@@ -1,0 +1,16 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  creationTimestamp: null
+  name: httpserver
+spec:
+  maxReplicas: 4
+  minReplicas: 2
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: httpserver
+  targetCPUUtilizationPercentage: 85  # если нагрузка CPU  > 85% в веб-приложении - добавляем добавляем   новый под
+status:
+  currentReplicas: 0
+  desiredReplicas: 0

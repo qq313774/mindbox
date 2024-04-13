@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpserver
+spec:
+  replicas: 2  # 2 реплики для отказоустойчивости + 2 реплики добавляются с помощью HPA и разместят pod's  равномерно по всем нодам
+  selector:
+    matchLabels:
+      app: httpserver
+  template:
+    metadata:
+      labels:
+        app: httpserver
+    spec:
+      containers:
+      - name: httpserver
+        image: trinitronx/python-simplehttpserver
+        resources:
+          requests:
+            memory: "128Mi"  # Запрашиваем 128MiB памяти для каждой реплики
+            cpu: "0.1"        # Изначально запрашиваем 0.1 CPU для каждой реплики
+          limits:
+            memory: "128Mi"  # Ограничиваем потребление памяти до 128MiB для каждой реплики
+            cpu: "1"         # Устанавливаем максимальное потребление CPU до 1 CPU для каждой реплики
+        readinessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 5  # Задержка перед началом проверки доступности
+          periodSeconds: 5         # Периодичность проверки доступности
+        livenessProbe:
+          tcpSocket:
+            port: 8080
+          initialDelaySeconds: 15  # Задержка перед началом проверки живучести
+          periodSeconds: 20         # Периодичность проверки живучести
+
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  creationTimestamp: null
+  name: httpserver
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: httpserver
+status:
+  loadBalancer: {}
